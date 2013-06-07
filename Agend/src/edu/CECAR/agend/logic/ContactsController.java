@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package edu.CECAR.agend.logic;
 
 import java.util.Vector;
@@ -22,7 +19,7 @@ public class ContactsController {
         contacts.addElement(contact);
     }
 
-    public void RemoveContact(Contact contact) {
+    public void removeContact(Contact contact) {
         contacts.removeElement(contact);
     }
 
