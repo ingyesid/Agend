@@ -31,12 +31,15 @@ public class AgendMidlet extends MIDlet {
     private Display display;
     private List listMenu;
     private StringItem stringItemSearchResult;
+    private StringItem stringItemSearchTaskResult;
     private Form formAddContact;
     private Form formAddTask;
     private Form formSearchContact;
+    private Form formSearchTask;
     private Form formCurrencyConverter;
     private TextField txtName;
     private TextField txtInputContactSearch;
+    private TextField txtInputTaskSearch;
     private TextField txtLastName;
     private TextField txtPhone;
     private TextField txtMobile;
@@ -51,12 +54,12 @@ public class AgendMidlet extends MIDlet {
     private final String COP = "COP";
     private final String USD = "USD";
     private final String EURO = "EURO";
-    private final String[] menuOptios =
-            new String[]{
-        "Agregar Contacto",
-        "Buscar Contacto",
-        "Convertidor de Monedas",
-        "Agregar Tarea"};
+    private final String[]  menuOptios = new String[]{
+                                  "Agregar Contacto",
+                                  "Buscar Contacto",
+                                  "Convertidor de Monedas",
+                                  "Agregar Tarea",
+                                  "Buscar Tarea"};
     private final String[] converterOptions =
             new String[]{"COP -> USD",
         "COP -> EURO",
@@ -68,9 +71,10 @@ public class AgendMidlet extends MIDlet {
     private Command commandSave;
     private Command commandConvert;
     private Command commandBack;
-    private Command commandSearchContact;
+    private Command commandSearch;
 
     public AgendMidlet() {
+       
         display = Display.getDisplay(AgendMidlet.this);
         listMenu = new List("Menu", List.EXCLUSIVE, menuOptios, null);
 
@@ -78,11 +82,12 @@ public class AgendMidlet extends MIDlet {
         formSearchContact = new Form("buscar Contact");
         formCurrencyConverter = new Form("Convertidor");
         formAddTask = new Form("Agregar Tarea");
+        formSearchTask = new Form("Buscar Tarea");
 
         commandSelect = new Command("Seleccionar", Command.OK, 0);
         commandBack = new Command("Atras", Command.BACK, 0);
         commandSave = new Command("Guardar", Command.SCREEN, 0);
-        commandSearchContact = new Command("buscar", Command.OK, 0);
+        commandSearch = new Command("buscar", Command.OK, 0);
         commandConvert = new Command("Convertir", Command.OK, 0);
 
         txtName = new TextField("Nombre", "", 100, TextField.ANY);
@@ -93,20 +98,23 @@ public class AgendMidlet extends MIDlet {
         txtTwitterUsername = new TextField("Usuario de Twitter", "", 100, TextField.ANY);
 
         txtInputContactSearch = new TextField("Nombre/apellido o telefono", "", 100, TextField.ANY);
+        txtInputTaskSearch = new TextField("Nombre", "", 100, TextField.ANY);
         stringItemSearchResult = new StringItem("Resultado", "");
+        stringItemSearchTaskResult = new StringItem("Resultado", "");
 
         txtInputCurrency = new TextField("COP", "", 100, TextField.NUMERIC);
         txtResultCurrency = new TextField("USD", "", 100, TextField.UNEDITABLE);
-        
+
         txtTaskName = new TextField("Nombre", "", 100, TextField.ANY);
         txtTaskDescription = new TextField("Descripcion", "", 100, TextField.ANY);
-        dateFieldTaskDate= new DateField("Fecha", DateField.DATE_TIME);
-        
+        dateFieldTaskDate = new DateField("Fecha", DateField.DATE_TIME);
+
         choiceGroupConverterOptions = new ChoiceGroup("", ChoiceGroup.POPUP, converterOptions, null);
 
         listMenu.addCommand(commandSelect);
         listMenu.setCommandListener(commandListenerMenu);
 
+        // form add contact
         formAddContact.append(txtName);
         formAddContact.append(txtLastName);
         formAddContact.append(txtPhone);
@@ -117,15 +125,22 @@ public class AgendMidlet extends MIDlet {
         formAddContact.addCommand(commandSave);
         formAddContact.setCommandListener(commandListenerFormContact);
 
+        // form search contact
         formSearchContact.append(txtInputContactSearch);
         formSearchContact.append(stringItemSearchResult);
 
-        formSearchContact.addCommand(commandSearchContact);
+        formSearchContact.addCommand(commandSearch);
         formSearchContact.addCommand(commandBack);
-        formSearchContact.setCommandListener(commandListenerForSeacrhContact);
-        //
+        formSearchContact.setCommandListener(commandListenerForSearchContact);
 
-        
+        // form search task
+        formSearchTask.append(txtInputTaskSearch);
+        formSearchTask.append(stringItemSearchTaskResult);
+
+        formSearchTask.addCommand(commandSearch);
+        formSearchTask.addCommand(commandBack);
+        formSearchTask.setCommandListener(commandListenerFormSearchTask);
+        //form add task
         formAddTask.append(txtTaskName);
         formAddTask.append(txtTaskDescription);
         formAddTask.append(dateFieldTaskDate);
@@ -133,7 +148,7 @@ public class AgendMidlet extends MIDlet {
         formAddTask.addCommand(commandSave);
         formAddTask.addCommand(commandBack);
         formAddTask.setCommandListener(commandListenerFormTask);
-        //
+        //form currency convert
         formCurrencyConverter.append(choiceGroupConverterOptions);
         formCurrencyConverter.append(txtInputCurrency);
         formCurrencyConverter.append(txtResultCurrency);
@@ -146,7 +161,6 @@ public class AgendMidlet extends MIDlet {
                     if (choiceGroupConverterOptions.getSelectedIndex() == 0) {
                         txtInputCurrency.setLabel(COP);
                         txtResultCurrency.setLabel(USD);
-
                     }
                     if (choiceGroupConverterOptions.getSelectedIndex() == 1) {
                         txtInputCurrency.setLabel(COP);
@@ -172,7 +186,7 @@ public class AgendMidlet extends MIDlet {
             }
         });
         contactsController = new ContactsController();
-        tasksController= new TasksController();
+        tasksController = new TasksController();
     }
 
     public void startApp() {
@@ -197,29 +211,30 @@ public class AgendMidlet extends MIDlet {
             return true;
         }
     }
-     public boolean taskFormIsComplete() {
+
+    public boolean taskFormIsComplete() {
         if (txtTaskName.getString().equals("")
-                || txtTaskDescription.getString().equals("")
-                ) {
+                || txtTaskDescription.getString().equals("")) {
             return false;
         } else {
             return true;
         }
     }
-     
-     public void clearAddContactForm(){
-         txtName.setString("");
-         txtLastName.setString("");
-         txtPhone.setString("");
-         txtMobile.setString("");
-         txtTwitterUsername.setString("");
-         txtEmail.setString("");
-     }
-      public void clearAddTaskForm(){
-         txtTaskDescription.setString("");
-         txtTaskName.setString("");
-         
-     }
+
+    public void clearAddContactForm() {
+        txtName.setString("");
+        txtLastName.setString("");
+        txtPhone.setString("");
+        txtMobile.setString("");
+        txtTwitterUsername.setString("");
+        txtEmail.setString("");
+    }
+
+    public void clearAddTaskForm() {
+        txtTaskDescription.setString("");
+        txtTaskName.setString("");
+
+    }
     //listener para los commands del list
     CommandListener commandListenerMenu = new CommandListener() {
         public void commandAction(Command command, Displayable displayable) {
@@ -235,8 +250,11 @@ public class AgendMidlet extends MIDlet {
                     case 2:
                         display.setCurrent(formCurrencyConverter);
                         break;
-                         case 3:
+                    case 3:
                         display.setCurrent(formAddTask);
+                        break;
+                    case 4:
+                        display.setCurrent(formSearchTask);
                         break;
                 }
 
@@ -260,7 +278,7 @@ public class AgendMidlet extends MIDlet {
                     contactsController.addContact(contact);
                     clearAddContactForm();
                     display.setCurrent(listMenu);
-                    
+
                 } else {
                     Alert alert = new Alert("Faltan datos", "ingrese todos los datos ", null, AlertType.ERROR);
                     display.setCurrent(alert, formAddContact);
@@ -268,7 +286,7 @@ public class AgendMidlet extends MIDlet {
             }
         }
     };
-     //listener para los commands del form add contac
+    //listener para los commands del form add contac
     CommandListener commandListenerFormTask = new CommandListener() {
         public void commandAction(Command command, Displayable displayable) {
             if (command == commandBack) {
@@ -276,8 +294,8 @@ public class AgendMidlet extends MIDlet {
             }
             if (command == commandSave) {
                 if (taskFormIsComplete()) {
-                   
-                    Task task= new Task(txtTaskName.getString().trim(), txtTaskDescription.getString().trim(), dateFieldTaskDate.getDate());
+
+                    Task task = new Task(txtTaskName.getString().trim(), txtTaskDescription.getString().trim(), dateFieldTaskDate.getDate());
                     display.setCurrent(listMenu);
                     tasksController.addTask(task);
                     clearAddTaskForm();
@@ -290,7 +308,25 @@ public class AgendMidlet extends MIDlet {
         }
     };
     //listener para los commands del form agregar tarea
-    CommandListener commandListenerForSeacrhContact = new CommandListener() {
+    CommandListener commandListenerForSearchContact = new CommandListener() {
+        public void commandAction(Command command, Displayable displayable) {
+            if (command == commandSave) {
+                if (txtInputTaskSearch.getString().equals("")) {
+                    Alert alert = new Alert("Faltan datos", "ingrese los datos para la busqueda ", null, AlertType.ERROR);
+                    display.setCurrent(alert, formSearchTask);
+                } else {
+                    if (tasksController.getTask(txtInputTaskSearch.getString().trim()) != null) {
+                        stringItemSearchResult.setText(tasksController.getTask(txtInputTaskSearch.getString().trim()).toString());
+                    }
+                }
+            }
+            if (command == commandBack) {
+                display.setCurrent(listMenu);
+            }
+        }
+    };
+    //listener para los commands del form agregar tarea
+    CommandListener commandListenerFormSearchTask = new CommandListener() {
         public void commandAction(Command command, Displayable displayable) {
             if (command == commandSave) {
                 if (txtInputContactSearch.getString().equals("")) {
